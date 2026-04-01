@@ -17,7 +17,7 @@ DEFAULT_NOTION_DATABASE_ID = "7892876a-3b90-4614-b90f-8dc426e129a5"
 STATUS_FIXED = "未対応"
 
 # プロパティ名（Notion DB と一致させる）
-PROP_TITLE = "クライアント名（タイトル）"
+PROP_TITLE = "クライアント名"
 PROP_DATE = "日付"
 PROP_SALES = "売上"
 PROP_STAFF = "スタッフ数"
@@ -390,7 +390,7 @@ def build_notion_properties(
 
 
 def _fallback_properties_guess(fields: dict[str, str]) -> dict[str, Any]:
-    """retrieve 失敗時: ユーザー指定の型想定で送る（ステータスは Status 列を想定）。"""
+    """retrieve 失敗時: コンサル分析 DB の型想定（ステータスは SELECT・未対応/対応中/完了）。"""
     return {
         PROP_TITLE: {"title": _split_rich_text(fields[PROP_TITLE])},
         PROP_DATE: {"date": {"start": fields[PROP_DATE]}},
@@ -402,7 +402,7 @@ def _fallback_properties_guess(fields: dict[str, str]) -> dict[str, Any]:
         PROP_ACT1: {"rich_text": _split_rich_text(fields[PROP_ACT1])},
         PROP_ACT2: {"rich_text": _split_rich_text(fields[PROP_ACT2])},
         PROP_ACT3: {"rich_text": _split_rich_text(fields[PROP_ACT3])},
-        PROP_STATUS: {"status": {"name": STATUS_FIXED}},
+        PROP_STATUS: {"select": {"name": STATUS_FIXED}},
     }
 
 
