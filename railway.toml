@@ -5,6 +5,8 @@
 builder = "nixpacks"
 
 [deploy]
+# Nixpacks が独自の gunicorn コマンド（固定ポート）を使わないよう明示する
+startCommand = "sh start.sh"
 healthcheckPath = "/"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
