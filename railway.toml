@@ -1,0 +1,10 @@
+# Railway 用（Nixpacks が requirements.txt / Procfile を検出）
+# ダッシュボードで Variables に LINE_* と ANTHROPIC_API_KEY を設定すること
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"

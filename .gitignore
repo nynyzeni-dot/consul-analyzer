@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# クライアント別の文字起こし・分析結果（リポジトリに含めない）
+input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
