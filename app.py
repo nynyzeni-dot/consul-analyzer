@@ -19,6 +19,7 @@ import requests
 from flask import Flask, abort, request
 
 from analyzer import analyze_transcript, get_client, load_env
+from notion_sync import save_consult_analysis_to_notion_safe
 
 load_env()
 
@@ -117,6 +118,7 @@ def run_analysis_and_push(user_id: str, client_name: str, text: str) -> None:
         for i, part in enumerate(parts):
             prefix = f"[{i + 1}/{len(parts)}]\n" if len(parts) > 1 else ""
             line_push(user_id, prefix + part)
+        save_consult_analysis_to_notion_safe(client_name, md)
     except RuntimeError as e:
         line_push(user_id, f"エラー: {str(e)[:LINE_TEXT_MAX]}")
     except Exception as e:

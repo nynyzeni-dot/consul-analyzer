@@ -67,6 +67,14 @@ python main.py
 
 6. ボットを友だち追加し、**テキストメッセージ**でコンサル文面を送る。まず「分析しています」と返り、完了後に分析結果がプッシュで届く。
 
+### Notion 連携（LINE 経由の分析結果を議事録 DB に保存）
+
+- `NOTION_API_KEY` を設定すると、分析完了後に **議事録データベースへ新規ページ**が追加されます。
+- **タイトル（議事録）**: `（LINE表示名） YYYY-MM-DD`
+- **ページ本文**: 「数字サマリー」「課題（優先度順）」「改善アクション（3つ）」を Claude 出力から抽出して見出し＋段落で配置。
+- **プロパティ**: DB を `retrieve` してスキーマに合わせ、`日付`・`会社名`（LINE名と選択肢が一致するときのみ）・`ステータス`（あれば先頭候補など）を可能な範囲で設定。
+- Notion のインテグレーションに、対象データベースへの**接続**が必要です。`pages.create` が 404 / object_not_found のときは `NOTION_DATABASE_ID` を Notion の「データベース ID」に変更するか、インテグレーションの共有設定を確認してください。
+
 ### 動作の注意
 
 - 分析はバックグラウンドで実行するため、LINE の Webhook はすぐ `200 OK` を返せます。
@@ -87,6 +95,8 @@ python main.py
    - `LINE_CHANNEL_ACCESS_TOKEN`
    - `ANTHROPIC_API_KEY`
    - 任意: `ANTHROPIC_MODEL`（未設定時は `claude-sonnet-4-5`）
+   - **Notion 連携**: `NOTION_API_KEY`（未設定なら Notion 保存のみスキップ）
+   - 任意: `NOTION_DATABASE_ID`（省略時は `26c708db-dcc2-4c1e-bc44-95a8df53c329`。`pages.create` が失敗する場合は Notion のデータベース ID を指定）
 
 5. デプロイ完了後、サービス画面の **Settings** → **Networking**（または **Generate Domain**）で **公開 URL** を発行する。Railway が付与するドメインはプロジェクトごとに異なり、例として `https://xxxx.up.railway.app` の形式になる。
 
@@ -110,6 +120,7 @@ python main.py
 | `main.py` | バッチ処理 CLI |
 | `app.py` | LINE Webhook（Flask） |
 | `railway_run.py` | Railway 用: `PORT` を読んで gunicorn を起動 |
+| `notion_sync.py` | 分析結果を Notion 議事録 DB に保存 |
 | `Procfile` | Railway / 起動定義 |
 | `input/` | CLI 用の入力 `.txt` |
 | `output/` | CLI 用の出力 `.md` |
