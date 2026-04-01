@@ -116,6 +116,17 @@ python main.py
 
 ブラウザや `curl` で `https://（手順5のドメイン）/` にアクセスすると `ok` が返ればプロセスは起動しています。
 
+### Notion 接続テスト
+
+`GET https://（ドメイン）/notion-test` で `databases.retrieve` を実行し、JSON で結果を返します。
+
+- `database_id` … 実際に使っている ID（**Railway の `NOTION_DATABASE_ID` があればそれが優先**、なければコード内の既定値）
+- `database_id_from_env` … `true` なら環境変数で上書きされている
+- `ok` … DB が取得できたか
+- `notion_api_key_set` … API キーが設定されているか（値そのものは返しません）
+
+**Could not find database** のときは、Notion の DB ページ URL から正しい `database_id` をコピーし、Railway の Variables に `NOTION_DATABASE_ID` として設定してください（コードの既定 ID は使わなくなります）。
+
 ## ファイル構成
 
 | ファイル | 役割 |

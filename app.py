@@ -16,10 +16,10 @@ import threading
 from typing import Any
 
 import requests
-from flask import Flask, abort, request
+from flask import Flask, Response, abort, request
 
 from analyzer import analyze_transcript, get_client, load_env
-from notion_sync import save_consult_analysis_to_notion_safe
+from notion_sync import run_notion_database_test, save_consult_analysis_to_notion_safe
 
 load_env()
 
@@ -173,6 +173,18 @@ def handle_event(event: dict[str, Any]) -> None:
 @app.get("/")
 def health() -> tuple[str, int]:
     return "ok", 200
+
+
+@app.get("/notion-test")
+def notion_test() -> Response:
+    """Notion API 接続と databases.retrieve のテスト（本番では必要ならアクセス制限を検討）。"""
+    result = run_notion_database_test()
+    body = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
+    return Response(
+        body,
+        mimetype="application/json; charset=utf-8",
+        status=200,
+    )
 
 
 @app.post("/callback")

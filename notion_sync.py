@@ -31,7 +31,79 @@ PROP_STATUS = "ステータス"
 
 
 def get_database_id() -> str:
-    return (os.getenv("NOTION_DATABASE_ID") or DEFAULT_NOTION_DATABASE_ID).strip()
+    """
+    使用する Notion データベース ID。
+    環境変数 NOTION_DATABASE_ID があれば最優先（Railway の Variables で上書きする）。
+    """
+    env_val = (os.getenv("NOTION_DATABASE_ID") or "").strip()
+    return env_val if env_val else DEFAULT_NOTION_DATABASE_ID
+
+
+def database_id_source() -> dict[str, Any]:
+    """診断用: 実際に使う ID と、環境変数由来かどうか。"""
+    env_val = (os.getenv("NOTION_DATABASE_ID") or "").strip()
+    effective = env_val if env_val else DEFAULT_NOTION_DATABASE_ID
+    return {
+        "effective_database_id": effective,
+        "from_environment_variable": bool(env_val),
+        "env_value_raw_length": len(env_val),
+        "default_if_unset": DEFAULT_NOTION_DATABASE_ID,
+    }
+
+
+def run_notion_database_test() -> dict[str, Any]:
+    """
+    Notion API で databases.retrieve を実行し、DB に接続できるか確認する。
+    API キーや ID は返さない（設定有無のフラグのみ）。
+    """
+    src = database_id_source()
+    db_id = src["effective_database_id"]
+    out: dict[str, Any] = {
+        "ok": False,
+        "database_id": db_id,
+        "database_id_from_env": src["from_environment_variable"],
+        "default_database_id": DEFAULT_NOTION_DATABASE_ID,
+        "notion_api_key_set": bool((os.getenv("NOTION_API_KEY") or "").strip()),
+    }
+
+    client = get_notion_client()
+    if client is None:
+        out["error"] = "NOTION_API_KEY が未設定です。Railway の Variables に設定してください。"
+        out["hint"] = "NOTION_DATABASE_ID は任意。未設定時は default_database_id を使用します。"
+        return out
+
+    try:
+        db = client.databases.retrieve(database_id=db_id)
+        out["ok"] = True
+        title_arr = db.get("title") or []
+        parts: list[str] = []
+        for item in title_arr:
+            if not isinstance(item, dict):
+                continue
+            if item.get("plain_text"):
+                parts.append(str(item["plain_text"]))
+            else:
+                te = item.get("text")
+                if isinstance(te, dict) and te.get("content"):
+                    parts.append(str(te["content"]))
+        out["database_title"] = "".join(parts) or "(無題)"
+        out["property_count"] = len(db.get("properties") or {})
+    except Exception as e:
+        out["error"] = str(e)
+        out["error_type"] = type(e).__name__
+        for attr in ("status", "code", "body"):
+            if hasattr(e, attr):
+                try:
+                    out[f"notion_{attr}"] = getattr(e, attr)
+                except Exception:
+                    pass
+        out["hint"] = (
+            "database_id が無効な場合、Notion の DB ページ URL 内の database/ の後の UUID を確認し、"
+            "Railway の NOTION_DATABASE_ID に設定してください。"
+            "対象 DB をインテグレーションに共有（接続）しているかも確認してください。"
+        )
+
+    return out
 
 
 def get_notion_client() -> Any | None:
