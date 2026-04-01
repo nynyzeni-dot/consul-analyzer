@@ -96,7 +96,7 @@ python main.py
 
 7. ボットの応答設定で Webhook を利用する。
 
-`Procfile` と `railway.toml`（ヘルスチェック `/`）により、Nixpacks が Python を検出して `gunicorn app:app` で起動します。
+`Procfile` と `railway.toml` の `startCommand` で `gunicorn` を **`$PORT` にバインド**して起動します。ヘルスチェックは `/`（タイムアウト 120 秒）。
 
 ### ヘルスチェック
 
@@ -109,7 +109,8 @@ python main.py
 | `analyzer.py` | Claude 分析ロジック（CLI・LINE 共通） |
 | `main.py` | バッチ処理 CLI |
 | `app.py` | LINE Webhook（Flask） |
-| `Procfile` | Railway / gunicorn 起動定義 |
+| `railway_run.py` | Railway 用: `PORT` を読んで gunicorn を起動 |
+| `Procfile` | Railway / 起動定義 |
 | `input/` | CLI 用の入力 `.txt` |
 | `output/` | CLI 用の出力 `.md` |
 
@@ -118,3 +119,4 @@ python main.py
 - **403 / Invalid signature**: `LINE_CHANNEL_SECRET` の誤り、またはプロキシがボディを改変していないか確認。
 - **503 on /callback**: `LINE_CHANNEL_*` が未設定。Railway の Variables を確認。
 - **Claude エラー**: `ANTHROPIC_API_KEY` と `ANTHROPIC_MODEL`（モデル名が API で有効か）を確認。
+- **デプロイが Removed / Container Stopping**: ログで gunicorn の bind 先が `$PORT` か確認。ヘルスチェック失敗の場合は Railway の Variables に `PORT` を手動で入れない（プラットフォームが自動付与）。Windows 由来の CRLF でシェルが落ちる場合は `.gitattributes` で `*.sh` を LF に固定する（本リポジトリは `start.sh` を使わず `gunicorn` 直起動）。

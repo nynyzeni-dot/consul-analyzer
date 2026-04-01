@@ -1,0 +1,2 @@
+# シェルスクリプトを Linux デプロイで壊さない（CRLF 防止）
+*.sh text eol=lf

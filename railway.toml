@@ -1,12 +1,12 @@
-# Railway 用（Nixpacks が requirements.txt / Procfile を検出）
-# ダッシュボードで Variables に LINE_* と ANTHROPIC_API_KEY を設定すること
+# Railway: Nixpacks でビルドし、起動は必ず $PORT にバインド（start.sh は CRLF 起因の停止を避けるため使わない）
 
 [build]
 builder = "nixpacks"
 
 [deploy]
-# Nixpacks が独自の gunicorn コマンド（固定ポート）を使わないよう明示する
-startCommand = "sh start.sh"
+# シェルに依存せず PORT を読む（$PORT 未展開で 8080 固定になる事故を防ぐ）
+startCommand = "python railway_run.py"
 healthcheckPath = "/"
-healthcheckTimeout = 30
+# コールドスタート・初回ワーカー起動で 30 秒だと落ちることがあるため余裕を持たせる
+healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
