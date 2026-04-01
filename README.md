@@ -11,6 +11,23 @@
 - Anthropic API キー
 - LINE Bot 利用時: LINE Developers のチャネルシークレット・アクセストークン（実装は公式 Webhook 署名検証 + Messaging API の HTTP 呼び出しのみ）
 
+## GitHub に初回 push（このフォルダ単体のリポジトリ）
+
+ローカルでは `consul-analyzer` を **独立した Git リポジトリ**にしてあり、`origin` は  
+`https://github.com/nynyzeni-dot/consul-analyzer.git` を指します。
+
+1. GitHub で **空の** リポジトリ `consul-analyzer` を作成する（README・.gitignore の追加は不要）。
+2. ターミナルで次を実行する。
+
+   ```bash
+   cd consul-analyzer
+   git push -u origin main
+   ```
+
+3. 認証が求められたら、GitHub の Personal Access Token または SSH を設定する。
+
+`input/*.txt` と `output/*.md` は `.gitignore` で除外してあり、クライアント別の文字起こし・分析結果はリポジトリに含まれません。
+
 ## ローカルセットアップ（CLI）
 
 ```bash
@@ -58,30 +75,32 @@ python main.py
 
 ## Railway にデプロイする手順
 
-1. この `consul-analyzer` フォルダを Git リポジトリに含め、GitHub 等にプッシュする（Railway はサブディレクトリ指定でデプロイ可能）。
+1. 上記どおり **GitHub に `main` を push** しておく。
 
-2. [Railway](https://railway.app/) で新規プロジェクト → **Deploy from GitHub** などでリポジトリを接続する。
+2. [Railway](https://railway.app/) にログインし、**New Project** → **Deploy from GitHub** で `nynyzeni-dot/consul-analyzer` を選ぶ。
 
-3. サービスの **Root Directory** を `consul-analyzer` に設定する（モノレポの場合）。
+3. このリポジトリはルートがそのままアプリなので、**Root Directory の変更は不要**（モノレポで親フォルダを繋いだ場合だけ `consul-analyzer` に設定）。
 
-4. **Variables** に以下を登録する。
+4. サービスの **Variables** に以下を登録する。
 
    - `LINE_CHANNEL_SECRET`
    - `LINE_CHANNEL_ACCESS_TOKEN`
    - `ANTHROPIC_API_KEY`
    - 任意: `ANTHROPIC_MODEL`（未設定時は `claude-sonnet-4-5`）
 
-5. Railway が `Procfile` を検知し `gunicorn app:app` で起動する。生成された **公開 URL** をコピーする（例: `https://xxx.up.railway.app`）。
+5. デプロイ完了後、サービス画面の **Settings** → **Networking**（または **Generate Domain**）で **公開 URL** を発行する。Railway が付与するドメインはプロジェクトごとに異なり、例として `https://xxxx.up.railway.app` の形式になる。
 
 6. LINE Developers の **Webhook URL** を  
-   `https://（Railwayのドメイン）/callback`  
-   に設定し、検証で接続確認する。
+   `https://（手順5のドメイン）/callback`  
+   に設定し、接続検証する。
 
 7. ボットの応答設定で Webhook を利用する。
 
+`Procfile` と `railway.toml`（ヘルスチェック `/`）により、Nixpacks が Python を検出して `gunicorn app:app` で起動します。
+
 ### ヘルスチェック
 
-ブラウザや `curl` で `https://（ドメイン）/` にアクセスすると `ok` が返ればプロセスは起動しています。
+ブラウザや `curl` で `https://（手順5のドメイン）/` にアクセスすると `ok` が返ればプロセスは起動しています。
 
 ## ファイル構成
 
